@@ -29,15 +29,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var gestionnaireReseau: NetworkManager
     private lateinit var preferencesPartagees: SharedPreferences
     
-    companion object {
-        @Volatile
-        private var instance: MainActivity? = null
 
-    }
     
     override fun onCreate(etatSauvegarde: Bundle?) {
         super.onCreate(etatSauvegarde)
-        instance = this
+
         
         liage = ActivityMainBinding.inflate(layoutInflater)
         setContentView(liage.root)
@@ -137,10 +133,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    override fun onDestroy() {
-        super.onDestroy()
-        instance = null
-    }
+
     
     private fun deconnecter() {
         lifecycleScope.launch {

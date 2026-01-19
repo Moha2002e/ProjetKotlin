@@ -58,7 +58,7 @@ class AddPatientFragment : Fragment() {
         val prenom = liage.firstNameEditText.text.toString().trim()
         val nom = liage.lastNameEditText.text.toString().trim()
         
-        if (champsVides(prenom, nom)) {
+        if (prenom.isEmpty() || nom.isEmpty()) {
             afficherMessage(getString(R.string.error_empty_fields))
             return
         }
@@ -66,9 +66,7 @@ class AddPatientFragment : Fragment() {
         envoyerRequeteAjout(prenom, nom)
     }
     
-    private fun champsVides(vararg champs: String): Boolean {
-        return champs.any { it.isEmpty() }
-    }
+
     
     private fun envoyerRequeteAjout(prenom: String, nom: String) {
         liage.addButton.isEnabled = false
@@ -98,23 +96,19 @@ class AddPatientFragment : Fragment() {
             liage.addButton.isEnabled = true
             
             if (reponse.success) {
-                afficherSucces(reponse)
-                viderChamps()
+                val idPatient = reponse.data as? Int
+                val message = getString(R.string.success_patient_added, idPatient ?: 0)
+                afficherMessage(message)
+                
+                liage.firstNameEditText.text?.clear()
+                liage.lastNameEditText.text?.clear()
             } else {
                 afficherMessage(reponse.message)
             }
         }
     }
     
-    private fun afficherSucces(reponse: CAPResponse) {
-        val idPatient = reponse.data as? Int
-        val message = if (idPatient != null) {
-            getString(R.string.success_patient_added, idPatient)
-        } else {
-            getString(R.string.success_patient_added, 0)
-        }
-        afficherMessage(message)
-    }
+
     
     private suspend fun gererErreur(message: String) {
         withContext(Dispatchers.Main) {
@@ -123,10 +117,7 @@ class AddPatientFragment : Fragment() {
         }
     }
     
-    private fun viderChamps() {
-        liage.firstNameEditText.text?.clear()
-        liage.lastNameEditText.text?.clear()
-    }
+
     
     private fun afficherMessage(message: String) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()

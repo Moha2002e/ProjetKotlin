@@ -25,8 +25,8 @@ class LoginActivity : AppCompatActivity() {
     
     override fun onCreate(etatSauvegarde: Bundle?) {
         super.onCreate(etatSauvegarde)
-        liage = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(liage.root)
+        liage = ActivityLoginBinding.inflate(layoutInflater) // ici ça fait référence à la classe ActivityLoginBinding qui est générée par Android
+        setContentView(liage.root) // ici on définit le layout de l'activité (c'est le fichier XML activity_login.xml)
         
         initialiserComposants()
         chargerIdentifiantsSauvegardes()
@@ -81,8 +81,8 @@ class LoginActivity : AppCompatActivity() {
             return
         }
         
-        val requete = CAPRequest.LoginRequest(identifiant, motDePasse)
-        val resultatReponse = gestionnaireReseau.sendRequest(requete)
+        val requete = CAPRequest.LoginRequest(identifiant, motDePasse)// ici on crée une requête de connexion
+        val resultatReponse = gestionnaireReseau.sendRequest(requete)// ici on envoie la requête
         
         resultatReponse.onSuccess { reponse ->
             traiterReponseConnexion(reponse, identifiant, motDePasse)

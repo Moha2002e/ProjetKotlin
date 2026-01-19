@@ -115,10 +115,10 @@ class NetworkManager(
 
 
             outputStream?.writeObject(requeteObj)
-            outputStream?.flush()
+            outputStream?.flush()// ici on vide le buffer
             
 
-            outputStream?.reset()
+            outputStream?.reset()// ici on vide le buffer pour éviter les doublons
 
 
 

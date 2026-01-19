@@ -135,16 +135,18 @@ class ConsultationListFragment : Fragment() {
         }
     }
     
+    // On transforme les données reçues en liste de consultations propre
     private fun convertirConsultations(donnees: Any?): List<Consultation> {
-        if (donnees == null) return emptyList()
+        val maListe = mutableListOf<Consultation>()
         
-        return try {
-            val chaineJson = Gson().toJson(donnees)
-            val typeListe = object : TypeToken<List<Consultation>>() {}.type
-            Gson().fromJson<List<Consultation>>(chaineJson, typeListe) ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
+        if (donnees is List<*>) {
+            for (objet in donnees) {
+                if (objet is Consultation) {
+                    maListe.add(objet)
+                }
+            }
         }
+        return maListe
     }
     
     private fun supprimerConsultation(consultation: Consultation) {
@@ -340,58 +342,28 @@ class ConsultationListFragment : Fragment() {
         }
     }
     
+    // On extrait les patients de la liste reçue pour remplir le menu déroulant
     private fun convertirPatients(donnees: Any?): List<ElementPatient> {
-        if (donnees == null) return emptyList()
+        val maListe = mutableListOf<ElementPatient>()
         
-        return try {
-            when (donnees) {
-                is List<*> -> donnees.mapNotNull { item -> extrairePatient(item) }
-                else -> emptyList()
+        if (donnees is List<*>) {
+            for (objet in donnees) {
+                if (objet is Patient) {
+                    val id = objet.getId()
+                    val nom = objet.getName()
+                    
+                    if (id != null && nom.isNotEmpty()) {
+                        maListe.add(ElementPatient(id, nom))
+                    }
+                }
             }
-        } catch (e: Exception) {
-            emptyList()
         }
+        return maListe
     }
     
-    private fun extrairePatient(item: Any?): ElementPatient? {
-        if (item == null) return null
-        
-        if (item is Patient) {
-            val id = item.getId()
-            val nom = item.getName()
-            return if (id != null && nom.isNotEmpty()) ElementPatient(id, nom) else null
-        }
-        
-        return extraireViaReflexion(item)
-    }
 
-    private fun extraireViaReflexion(item: Any): ElementPatient? {
-        try {
-            val classePatient = item.javaClass
-            val methodeGetId = classePatient.getMethod("getId")
-            val methodeGetLastName = classePatient.getMethod("getLast_name")
-            val methodeGetFirstName = classePatient.getMethod("getFirst_name")
-            
-            val idObj = methodeGetId.invoke(item)
-            val nomFamille = methodeGetLastName.invoke(item) as? String ?: ""
-            val prenom = methodeGetFirstName.invoke(item) as? String ?: ""
-            
-            val id = when (idObj) {
-                is Number -> idObj.toInt()
-                else -> null
-            }
-            
-            val nomComplet = "$nomFamille $prenom".trim()
-            
-            return if (id != null && nomComplet.isNotEmpty()) {
-                ElementPatient(id, nomComplet)
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            return null
-        }
-    }
+
+
     
     private fun mettreAJourConsultation(id: Int, date: String?, heure: String?, idPatient: Int?, raison: String?) {
         lifecycleScope.launch {

@@ -95,13 +95,11 @@ class SearchConsultationsFragment : Fragment() {
             ).show()
         }
         
-        configurerEditTextLectureSeule(liage.dateEditText)
+        liage.dateEditText.isFocusable = false
+        liage.dateEditText.isClickable = true
     }
     
-    private fun configurerEditTextLectureSeule(champ: EditText) {
-        champ.isFocusable = false
-        champ.isClickable = true
-    }
+
     
     private fun configurerSelecteurPatients() {
         val listePatients = mutableListOf(ElementPatient(null, getString(R.string.all_patients)))
@@ -156,77 +154,30 @@ class SearchConsultationsFragment : Fragment() {
         }
     }
     
+    // Fonction pour convertir les données reçues en liste de patients pour le menu déroulant
     private fun convertirPatients(donnees: Any?): List<ElementPatient> {
-        if (donnees == null) return emptyList()
+        val listeFinale = mutableListOf<ElementPatient>()
         
-        return try {
-            when (donnees) {
-                is List<*> -> donnees.mapNotNull { item -> extrairePatient(item) }
-                else -> {
-                    // Essayer via Gson si ce n'est pas une liste directe (cas rare mais possible selon l'implémentation serveur)
-                    try {
-                        val chaineJson = Gson().toJson(donnees)
-                        val typeListe = object : TypeToken<List<Patient>>() {}.type
-                        val resultat = Gson().fromJson<List<Patient>>(chaineJson, typeListe)
-                        resultat?.mapNotNull { item -> extrairePatient(item) } ?: emptyList()
-                    } catch (e: Exception) {
-                        emptyList()
+        // On vérifie si c'est bien une liste
+        if (donnees is List<*>) {
+            // On parcourt chaque élément de la liste
+            for (element in donnees) {
+                // Si l'élément est un Patient, on prend ses infos
+                if (element is Patient) {
+                    val id = element.getId()
+                    val nom = element.getName()
+                    
+                    // Si les infos sont valides, on l'ajoute à notre liste
+                    if (id != null && nom.isNotEmpty()) {
+                        listeFinale.add(ElementPatient(id, nom))
                     }
                 }
             }
-        } catch (e: Exception) {
-            emptyList()
         }
+        return listeFinale
     }
     
-    private fun extrairePatient(item: Any?): ElementPatient? {
-        if (item == null) return null
-        
-        if (item is Patient) {
-            val id = item.getId()
-            val nom = item.getName()
-            return if (id != null && nom.isNotEmpty()) ElementPatient(id, nom) else null
-        }
-        
-        return extraireViaReflexion(item)
-    }
 
-    private fun extraireViaReflexion(item: Any): ElementPatient? {
-        try {
-            val classePatient = item.javaClass
-            val methodeGetId = classePatient.getMethod("getId")
-            val methodeGetLastName = classePatient.getMethod("getLast_name")
-            val methodeGetFirstName = classePatient.getMethod("getFirst_name")
-            
-            val idObj = methodeGetId.invoke(item)
-            val nomFamille = methodeGetLastName.invoke(item) as? String ?: ""
-            val prenom = methodeGetFirstName.invoke(item) as? String ?: ""
-            
-            val id = when (idObj) {
-                is Number -> idObj.toInt()
-                else -> null
-            }
-            
-            val nomComplet = "$nomFamille $prenom".trim()
-            
-            return if (id != null && nomComplet.isNotEmpty()) {
-                ElementPatient(id, nomComplet)
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            // Tenter le parsing via Gson sur l'objet individuel si la réflexion échoue
-            return try {
-                val chaineJson = Gson().toJson(item)
-                val patient = Gson().fromJson(chaineJson, Patient::class.java)
-                val id = patient.getId()
-                val nom = patient.getName()
-                if (id != null && nom.isNotEmpty()) ElementPatient(id, nom) else null
-            } catch (e2: Exception) {
-                null
-            }
-        }
-    }
     
     private fun configurerBoutonRecherche() {
         liage.searchButton.setOnClickListener {
@@ -289,16 +240,18 @@ class SearchConsultationsFragment : Fragment() {
         }
     }
     
+    // Fonction pour convertir les données en liste de consultations
     private fun convertirConsultations(donnees: Any?): List<Consultation> {
-        if (donnees == null) return emptyList()
+        val listeFinale = mutableListOf<Consultation>()
         
-        return try {
-            val chaineJson = Gson().toJson(donnees)
-            val typeListe = object : TypeToken<List<Consultation>>() {}.type
-            Gson().fromJson<List<Consultation>>(chaineJson, typeListe) ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
+        if (donnees is List<*>) {
+            for (element in donnees) {
+                if (element is Consultation) {
+                    listeFinale.add(element)
+                }
+            }
         }
+        return listeFinale
     }
     
     private suspend fun gererErreur(message: String) {
