@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_consultations">
+
+    <fragment
+        android:id="@+id/nav_consultations"
+        android:name="com.example.myapplication.view.ConsultationListFragment"
+        android:label="@string/nav_consultations"
+        tools:layout="@layout/fragment_consultation_list" />
+
+    <fragment
+        android:id="@+id/nav_add_consultation"
+        android:name="com.example.myapplication.view.AddConsultationFragment"
+        android:label="@string/nav_add_consultation"
+        tools:layout="@layout/fragment_add_consultation" />
+
+    <fragment
+        android:id="@+id/nav_add_patient"
+        android:name="com.example.myapplication.view.AddPatientFragment"
+        android:label="@string/nav_add_patient"
+        tools:layout="@layout/fragment_add_patient" />
+
+    <fragment
+        android:id="@+id/nav_search"
+        android:name="com.example.myapplication.view.SearchConsultationsFragment"
+        android:label="@string/nav_search"
+        tools:layout="@layout/fragment_search_consultations" />
+
+</navigation>
+

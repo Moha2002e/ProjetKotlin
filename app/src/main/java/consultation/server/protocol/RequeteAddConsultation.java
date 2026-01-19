@@ -1,0 +1,178 @@
+package consultation.server.protocol;
+
+import java.io.Serializable;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
+public class RequeteAddConsultation implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private transient LocalDate date;
+    private transient LocalTime time;
+    private transient int doctorId;
+    private transient int count;
+    private transient String dateString;
+    private transient String timeString;
+    private transient int duree;
+
+    public RequeteAddConsultation(int doctorId, LocalDate date, LocalTime time, int count, int duree) {
+        this.doctorId = doctorId;
+        this.date = date;
+        this.time = time;
+        this.count = count;
+        this.dateString = date != null ? date.toString() : null;
+        this.timeString = time != null ? time.toString() : null;
+        this.duree = duree;
+    }
+
+    public RequeteAddConsultation(int doctorId, String dateString, String timeString, int count, int duree) {
+        this.doctorId = doctorId;
+        this.count = count;
+        this.duree = duree;
+        this.dateString = dateString;
+        this.timeString = timeString;
+        if (dateString != null && !dateString.isEmpty()) {
+            try {
+                this.date = LocalDate.parse(dateString);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Date invalide: " + dateString, e);
+            }
+        } else {
+            throw new IllegalArgumentException("Date ne peut pas être null");
+        }
+        if (timeString != null && !timeString.isEmpty()) {
+            try {
+                if (timeString.length() == 5 && timeString.indexOf(':') == 2) {
+                    this.time = LocalTime.parse(timeString, TIME_FORMATTER);
+                } else {
+                    this.time = LocalTime.parse(timeString);
+                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Heure invalide: " + timeString, e);
+            }
+        } else {
+            throw new IllegalArgumentException("Heure ne peut pas être null");
+        }
+        if (duree <= 0) {
+            throw new IllegalArgumentException("La durée doit être supérieure à 0");
+        }
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        String dateStr = dateString != null ? dateString : (date != null ? date.toString() : null);
+        String timeStr = timeString != null ? timeString : (time != null ? time.toString() : null);
+
+        out.writeInt(doctorId);
+        out.writeInt(duree);
+        out.writeInt(count);
+        out.writeObject(dateStr);
+        out.writeObject(timeStr);
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            this.doctorId = in.readInt();
+            this.duree = in.readInt();
+            this.count = in.readInt();
+            String dateStr = (String) in.readObject();
+            String timeStr = (String) in.readObject();
+            this.dateString = dateStr;
+            this.timeString = timeStr;
+
+            if (this.duree <= 0) {
+                throw new IOException("La durée doit être supérieure à 0, valeur reçue: " + this.duree);
+            }
+
+            if (dateStr != null && !dateStr.isEmpty()) {
+                try {
+                    this.date = LocalDate.parse(dateStr);
+                } catch (Exception e) {
+                    throw new IOException("Erreur lors de la désérialisation de la date: " + dateStr, e);
+                }
+            } else {
+                throw new IOException("dateString ne peut pas être null ou vide");
+            }
+
+            if (timeStr != null && !timeStr.isEmpty()) {
+                try {
+                    if (timeStr.length() == 5 && timeStr.indexOf(':') == 2) {
+                        this.time = LocalTime.parse(timeStr, TIME_FORMATTER);
+                    } else {
+                        this.time = LocalTime.parse(timeStr);
+                    }
+                } catch (Exception e) {
+                    throw new IOException("Erreur lors de la désérialisation de l'heure: " + timeStr, e);
+                }
+            } else {
+                throw new IOException("timeString ne peut pas être null ou vide");
+            }
+        } catch (java.io.OptionalDataException e) {
+            throw new IOException(
+                    "Erreur de format de sérialisation - le serveur doit utiliser la même version de RequeteAddConsultation avec duree en int. "
+                            + e.getMessage(),
+                    e);
+        } catch (Exception e) {
+            throw new IOException("Erreur lors de la désérialisation de RequeteAddConsultation: " + e.getMessage(), e);
+        }
+    }
+
+    private void ensureInitialized() {
+        if (date == null && dateString != null && !dateString.isEmpty()) {
+            try {
+                date = LocalDate.parse(dateString);
+            } catch (Exception e) {
+            }
+        }
+        if (time == null && timeString != null && !timeString.isEmpty()) {
+            try {
+                if (timeString.length() == 5 && timeString.indexOf(':') == 2) {
+                    time = LocalTime.parse(timeString, TIME_FORMATTER);
+                } else {
+                    time = LocalTime.parse(timeString);
+                }
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    public int getDoctorId() {
+        return doctorId;
+    }
+
+    public LocalDate getDate() {
+        if (date == null && dateString != null) {
+            try {
+                date = LocalDate.parse(dateString);
+            } catch (Exception e) {
+            }
+        }
+        return date;
+    }
+
+    public LocalTime getTime() {
+        if (time == null && timeString != null && !timeString.isEmpty()) {
+            try {
+                if (timeString.length() == 5 && timeString.indexOf(':') == 2) {
+                    time = LocalTime.parse(timeString, TIME_FORMATTER);
+                } else {
+                    time = LocalTime.parse(timeString);
+                }
+            } catch (Exception e) {
+                System.err.println("Erreur lors du parsing de l'heure: " + timeString + " - " + e.getMessage());
+            }
+        }
+        return time;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public int getDuree() {
+        return duree;
+    }
+}
